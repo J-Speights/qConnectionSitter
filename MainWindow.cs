@@ -9,178 +9,326 @@ using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Windows.Forms;
+using System.Xml.Serialization;
 
 
-namespace qConnectionSitter {
+namespace qConnectionSitter
+{
 
-	public partial class MainWindow : Form {
-		private Dictionary<string, string> _monitored  = new Dictionary<string, string>();
-		private string                     _executable = null                            ;
-		private bool                       _enabled    = false                           ;
-		private bool                       _awaiting   = false                           ;
-		private bool                       _up         = false                           ;
-		private Timer                      _timer      = new Timer()                     ;
-		private OpenFileDialog             _openDialog = new OpenFileDialog()            ;
+    public partial class MainWindow : Form
+    {
+        private readonly Dictionary<string, string> _monitored = new Dictionary<string, string>();
+        private string _executable = null;
+        private bool _enabled = false;
+        private bool _awaiting = false;
+        private bool _up = false;
+        private readonly Timer _timer = new Timer();
+        private readonly OpenFileDialog _openDialog = new OpenFileDialog();
 
-		private static Icon __enabledIcon ;
-		private static Icon __disabledIcon;
+        private const int TimerIntervalMilliseconds = 500;
 
-		public MainWindow() {
-			InitializeComponent();
-			_openDialog.ShowReadOnly     = false                                                               ;
-			_openDialog.CheckFileExists  = true                                                                ;
-			_openDialog.Title            = "Select Executable File"                                            ;
-			_openDialog.Filter           = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*"                ;
-			_openDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-			var paths = new string[] { @"C:\Program Files (x86)\qBittorrent\qbittorrent.exe", @"C:\Program Files\qBittorrent\qbittorrent.exe" };
-			foreach(var _ in paths) {
-				if(File.Exists(_)) {
-					_executable = _;
-					txtExecutable.Text = _executable;
-					break;
-				}
-			}
-			nicTray.Icon = __disabledIcon;
-			_timer.Tick     += _timer_Tick;
-			_timer.Interval  = 500        ;
-			_timer.Enabled   = true       ;
-		}
+        private readonly static Icon _enabledIcon;
+        private readonly static Icon _disabledIcon;
+        private const string ConfigFilePath = "config.xml";
 
-		private void _timer_Tick(object sender, EventArgs e) {
-			_timer.Enabled = false;
-			_RefreshStatus();
-			if(_enabled) {
-				if(_awaiting && _up) {
-					try {
-						var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(_executable));
-						foreach(var _ in processes) {
-							_.Kill       ();
-							_.WaitForExit();
-						}
-					} catch { }
-					Process.Start(_executable);
-					_awaiting = false;
-				} else if(!(_awaiting || _up)) {
-					_awaiting = true;
-				}
-			}
-			_timer.Enabled = true;
-		}
+        public MainWindow()
+        {
+            InitializeComponent();
+            _openDialog.ShowReadOnly = false;
+            _openDialog.CheckFileExists = true;
+            _openDialog.Title = "Select Executable File";
+            _openDialog.Filter = "Executable Files (*.exe)|*.exe|All Files (*.*)|*.*";
+            _openDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            var paths = new string[] { @"C:\Program Files (x86)\qBittorrent\qbittorrent.exe", @"C:\Program Files\qBittorrent\qbittorrent.exe" };
+            foreach (var path in paths)
+            {
+                if (File.Exists(path))
+                {
+                    _executable = path;
+                    txtExecutable.Text = _executable;
+                    break;
+                }
+            }
+            nicTray.Icon = _disabledIcon;
+            _timer.Tick += Timer_Tick;
+            _timer.Interval = TimerIntervalMilliseconds;
+            _timer.Enabled = true;
+            LoadConfig();
+        }
 
-		private void btnAdd_Click(object sender, EventArgs e) {
-			var parameters = new AddConnectionsDialog.Parameters();
-			if(AddConnectionsDialog.ShowNewDialog(this, parameters) == DialogResult.OK) 	{
-				foreach(var _ in parameters.Connections) _monitored[_.Id] = _.Description;
-				lsvConnections.Items.Clear();
-				var items = _monitored.OrderBy(_ => _.Value);
-				foreach(var _ in items) {
-					var item_ = lsvConnections.Items.Add(_.Key, _.Value, -1);
-					item_.Tag = _.Key;
-					item_.SubItems.Add("");
-				}
-				_RefreshStatus();
-				_RefreshInterface();
-			}
-		}
+        private void Timer_Tick(object sender, EventArgs e)
+        {
+            _timer.Enabled = false;
+            RefreshStatus();
+            if (_enabled)
+            {
+                if (_awaiting && _up)
+                {
+                    try
+                    {
+                        var processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(_executable));
+                        foreach (var process in processes)
+                        {
+                            process.Kill();
+                            process.WaitForExit();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Failed to stop process: {ex.Message}");
+                    }
+                    if (!string.IsNullOrEmpty(_executable))
+                    {
+                        Process.Start(_executable);
+                    }
+                    _awaiting = false;
+                }
+                else if (!(_awaiting || _up))
+                {
+                    _awaiting = true;
+                }
+            }
+            _timer.Enabled = true;
+        }
 
-		private void _RefreshStatus() {
-			_up = false;
-			var interfaces = NetworkInterface.GetAllNetworkInterfaces();
-			foreach(var _ in interfaces) {
-				if(lsvConnections.Items.ContainsKey(_.Id)) {
-					var item_ = lsvConnections.Items[_.Id];
-					if(item_.SubItems[1].Text != _.OperationalStatus.ToString()) item_.SubItems[1].Text = _.OperationalStatus.ToString();
-					if(_.OperationalStatus == OperationalStatus.Up) _up = true;
-				}
-			}
-		}
+        private void BtnAdd_Click(object sender, EventArgs e)
+        {
+            var parameters = new AddConnectionsDialog.Parameters();
+            if (AddConnectionsDialog.ShowNewDialog(this, parameters) == DialogResult.OK)
+            {
+                foreach (var connection in parameters.Connections) _monitored[connection.Id] = connection.Description;
+                RefreshConnectionList();
+                RefreshStatus();
+                RefreshInterface();
+                SaveConfig();
+            }
+        }
 
-		private void _RefreshInterface() {
-			btnEnable.Enabled = ((_executable != null) && (_monitored.Count != 0));
-		}
+        private void RefreshStatus()
+        {
+            _up = false;
+            var interfaces = NetworkInterface.GetAllNetworkInterfaces();
+            foreach (var intfce in interfaces)
+            {
+                if (lsvConnections.Items.ContainsKey(intfce.Id))
+                {
+                    var listItem = lsvConnections.Items[intfce.Id];
+                    if (listItem.SubItems[1].Text != intfce.OperationalStatus.ToString()) listItem.SubItems[1].Text = intfce.OperationalStatus.ToString();
+                    if (intfce.OperationalStatus == OperationalStatus.Up) _up = true;
+                }
+            }
+        }
 
-		private void btnRemove_Click(object sender, EventArgs e) {
-			var remove = new List<string>();
-			foreach(ListViewItem _ in lsvConnections.SelectedItems) remove.Add((string)_.Tag);
-			foreach(var _ in remove) {
-				_monitored.Remove(_);
-				lsvConnections.Items.RemoveByKey(_);
-			}
-			btnRemove.Enabled = false;
-			_RefreshInterface();
-		}
+        private void RefreshInterface()
+        {
+            btnEnable.Enabled = ((_executable != null) && (_monitored.Count != 0));
+        }
 
-		private void lsvConnections_SelectedIndexChanged(object sender, EventArgs e) {
-			btnRemove.Enabled = (lsvConnections.SelectedItems.Count != 0);
-		}
+        private void BtnRemove_Click(object sender, EventArgs e)
+        {
+            var remove = new List<string>();
+            foreach (ListViewItem selectedItem in lsvConnections.SelectedItems) remove.Add((string)selectedItem.Tag);
+            foreach (var item in remove)
+            {
+                _monitored.Remove(item);
+                lsvConnections.Items.RemoveByKey(item);
+            }
+            btnRemove.Enabled = false;
+            RefreshInterface();
+            SaveConfig();
+        }
 
-		private void btnExecutableBrowse_Click(object sender, EventArgs e) {
-			if(_executable != null) {
-				_openDialog.InitialDirectory = Path.GetDirectoryName(_executable);
-				_openDialog.FileName = Path.GetFileName(_executable);
-			}
-			if(_openDialog.ShowDialog(this) == DialogResult.OK) {
-				_executable = _openDialog.FileName;
-				txtExecutable.Text = _executable;
-				_RefreshInterface();
-			}
-		}
+        private void LsvConnections_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            btnRemove.Enabled = (lsvConnections.SelectedItems.Count != 0);
+        }
 
-		private void MainWindow_Resize(object sender, EventArgs e) {
-			Visible = (WindowState != FormWindowState.Minimized);
-		}
+        private void BtnExecutableBrowse_Click(object sender, EventArgs e)
+        {
+            if (_executable != null)
+            {
+                _openDialog.InitialDirectory = Path.GetDirectoryName(_executable);
+                _openDialog.FileName = Path.GetFileName(_executable);
+            }
+            if (_openDialog.ShowDialog(this) == DialogResult.OK)
+            {
+                _executable = _openDialog.FileName;
+                txtExecutable.Text = _executable;
+                RefreshInterface();
+                SaveConfig();
+            }
+        }
 
-		private void nicTray_Click(object sender, EventArgs e) {
-			if(WindowState == FormWindowState.Minimized) {
-				Visible = true;
-				WindowState = FormWindowState.Normal;
-				Activate();
-			} else {
-				WindowState = FormWindowState.Minimized;
-			}
-		}
+        private void MainWindow_Resize(object sender, EventArgs e)
+        {
+            Visible = (WindowState != FormWindowState.Minimized);
+        }
 
-		private void btnEnable_Click(object sender, EventArgs e) {
-			foreach(Control _ in Controls) {
-				if(!(_ == btnEnable)) _.Enabled = _enabled;
-			}
-			if(_enabled) {
-				_enabled = false;
-				_awaiting = false;
-				btnEnable.Text = "Enable";
-				nicTray.Text = (Application.ProductName + " (Disabled)");
-				nicTray.Icon = __disabledIcon;
-			} else {
-				_awaiting = !_up;
-				_enabled = true;
-				btnEnable.Text = "Disable";
-				nicTray.Text = (Application.ProductName + " (Enabled)");
-				nicTray.Icon = __enabledIcon;
-			}
-		}
+        private void NicTray_Click(object sender, EventArgs e)
+        {
+            if (WindowState == FormWindowState.Minimized)
+            {
+                Visible = true;
+                WindowState = FormWindowState.Normal;
+                Activate();
+            }
+            else
+            {
+                WindowState = FormWindowState.Minimized;
+            }
+        }
 
-		static MainWindow() {
-			using(var bitmap = new Bitmap(16, 16, PixelFormat.Format32bppArgb)) {
-				using(var graphics = Graphics.FromImage(bitmap)) {
-					graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-					graphics.SmoothingMode = SmoothingMode.HighQuality;
-					graphics.FillRectangle(Brushes.Green, 0, 0, 16, 16);
-					graphics.DrawRectangle(Pens.White, 0, 0, 16, 16);
-					graphics.DrawString("q", SystemFonts.MenuFont, Brushes.White, 3, -3);
-				}
-				__enabledIcon = Icon.FromHandle(bitmap.GetHicon());
-			}
-			using(var bitmap = new Bitmap(16, 16, PixelFormat.Format32bppArgb)) {
-				using(var graphics = Graphics.FromImage(bitmap)) {
-					graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
-					graphics.SmoothingMode = SmoothingMode.HighQuality;
-					graphics.FillRectangle(Brushes.DarkRed, 0, 0, 16, 16);
-					graphics.DrawRectangle(Pens.White, 0, 0, 16, 16);
-					graphics.DrawString("q", SystemFonts.MenuFont, Brushes.White, 3, -3);
-				}
-				__disabledIcon = Icon.FromHandle(bitmap.GetHicon());
-			}
-		}
-	}
+        private void BtnEnable_Click(object sender, EventArgs e)
+        {
+            foreach (Control ctrl in Controls)
+            {
+                if (!(ctrl == btnEnable)) ctrl.Enabled = _enabled;
+            }
+            if (_enabled)
+            {
+                _enabled = false;
+                _awaiting = false;
+                btnEnable.Text = "Enable";
+                nicTray.Text = (Application.ProductName + " (Disabled)");
+                nicTray.Icon = _disabledIcon;
+            }
+            else
+            {
+                _awaiting = !_up;
+                _enabled = true;
+                btnEnable.Text = "Disable";
+                nicTray.Text = (Application.ProductName + " (Enabled)");
+                nicTray.Icon = _enabledIcon;
+            }
+        }
+
+        private void SaveConfig()
+        {
+            var config = new AppConfig
+            {
+                ExecutablePath = _executable,
+                MonitoredInterfaceIds = _monitored.Keys.ToList(),
+                EnableAtAppLaunch = _chkEnabledAtAppLaunch.Checked
+            };
+
+            try
+            {
+                using (var stream = new FileStream(ConfigFilePath, FileMode.Create))
+                {
+                    var serializer = new XmlSerializer(typeof(AppConfig));
+                    serializer.Serialize(stream, config);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error saving config: {ex.Message}");
+            }
+        }
+
+        private void RefreshConnectionList()
+        {
+            lsvConnections.Items.Clear();
+            var items = _monitored.OrderBy(kvp => kvp.Value);
+            foreach (var item in items)
+            {
+                var listItem = lsvConnections.Items.Add(item.Key, item.Value, -1);
+                listItem.Tag = item.Key;
+                listItem.SubItems.Add("");
+            }
+        }
+
+        private void LoadConfig()
+        {
+            if (!File.Exists(ConfigFilePath)) return;
+
+            try
+            {
+                using (var stream = new FileStream(ConfigFilePath, FileMode.Open))
+                {
+                    var serializer = new XmlSerializer(typeof(AppConfig));
+                    var config = (AppConfig)serializer.Deserialize(stream);
+
+                    _executable = config.ExecutablePath;
+                    txtExecutable.Text = _executable;
+
+                    _monitored.Clear();
+
+                    var interfaces = NetworkInterface.GetAllNetworkInterfaces();
+                    foreach (var id in config.MonitoredInterfaceIds)
+                    {
+                        var match = interfaces.FirstOrDefault(nic => nic.Id == id);
+                        string name = match != null ? match.Name : "(Unknown Name)";
+                        _monitored[id] = name;
+                    }
+
+                    RefreshConnectionList();
+
+                    _chkEnabledAtAppLaunch.Checked = config.EnableAtAppLaunch;
+
+                    RefreshStatus();
+                    RefreshInterface();
+
+                    if (config.EnableAtAppLaunch)
+                    {
+                        BtnEnable_Click(this, EventArgs.Empty);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error Loading config: {ex.Message}");
+            }
+        }
+
+        static MainWindow()
+        {
+            _enabledIcon = CreateTrayIcon(Color.Green, "q");
+            _disabledIcon = CreateTrayIcon(Color.DarkRed, "q");
+        }
+
+        private static Icon CreateTrayIcon(Color color, string text)
+        {
+            using (var bitmap = new Bitmap(16, 16, PixelFormat.Format32bppArgb))
+            {
+                using (var graphics = Graphics.FromImage(bitmap))
+                {
+                    graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    graphics.SmoothingMode = SmoothingMode.HighQuality;
+                    graphics.FillRectangle(new SolidBrush(color), 0, 0, 16, 16);
+                    graphics.DrawRectangle(Pens.White, 0, 0, 16, 16);
+                    graphics.DrawString(text, SystemFonts.MenuFont, Brushes.White, 3, -3);
+                }
+
+                return Icon.FromHandle(bitmap.GetHicon());
+            }
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            SaveConfig();
+            base.OnFormClosing(e);
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lblExecutableText_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void MainWindow_Load(object sender, EventArgs e)
+        {
+
+        }
+    }
+
 
 }

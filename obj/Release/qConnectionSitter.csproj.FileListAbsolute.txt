@@ -1,0 +1,11 @@
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\bin\Release\qConnectionSitter.exe.config
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\bin\Release\qConnectionSitter.exe
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\bin\Release\qConnectionSitter.pdb
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Release\qConnectionSitter.csproj.AssemblyReference.cache
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Release\qConnectionSitter.AddConnectionsDialog.resources
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Release\qConnectionSitter.MainWindow.resources
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Release\qConnectionSitter.Properties.Resources.resources
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Release\qConnectionSitter.csproj.GenerateResource.cache
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Release\qConnectionSitter.csproj.CoreCompileInputs.cache
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Release\qConnectionSitter.exe
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Release\qConnectionSitter.pdb

@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<AppConfig xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <ExecutablePath>C:\Windows\System32\notepad.exe</ExecutablePath>
+  <MonitoredInterfaceIds>
+    <string>{044B579E-F22B-4D51-8A2E-573856DB4587}</string>
+  </MonitoredInterfaceIds>
+  <EnableAtAppLaunch>true</EnableAtAppLaunch>
+</AppConfig>
