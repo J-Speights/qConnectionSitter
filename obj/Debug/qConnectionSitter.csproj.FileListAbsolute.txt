@@ -9,3 +9,5 @@ C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitt
 C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Debug\qConnectionSitter.csproj.CoreCompileInputs.cache
 C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Debug\qConnectionSitter.exe
 C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Debug\qConnectionSitter.pdb
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Debug\qConnectionSitter.exe.config
+C:\Users\John Speights\OneDrive - Aegis Foundry\Documents\GitHub\qConnectionSitter\obj\Debug\qConnectionSitter.SettingsForm.resources

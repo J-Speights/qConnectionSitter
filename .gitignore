@@ -1,0 +1,46 @@
+# Build results
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio files
+.vs/
+.vscode/
+
+# Rider (JetBrains) files
+.idea/
+*.sln.iml
+
+# Backup & temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*~ 
+
+# Autosave files
+*.autosave
+
+# ReSharper files
+_ReSharper*/
+*.DotSettings.user
+
+# Windows image thumbnails
+Thumbs.db
+ehthumbs.db
+
+# NuGet packages
+*.nupkg
+packages/
+*.snupkg
+
+# Configuration transforms
+*.Transform*
+
+# Publish profiles
+Properties/PublishProfiles/

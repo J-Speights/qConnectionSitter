@@ -19,14 +19,14 @@ namespace qConnectionSitter
 
             Settings = existingSettings;
 
-            chkEnableOnStartup.Checked = Settings.EnableOnStartup;
+            chkEnableOnStartup.Checked = Settings.StartMonitorOnLaunch;
             chkStartMinimized.Checked = Settings.StartMinimized;
             chkRunOnStartup.Checked = Settings.RunOnStartup;
         }
 
         private void BtnOK_Click(object sender, EventArgs e)
         {
-            Settings.EnableOnStartup = chkEnableOnStartup.Checked;
+            Settings.StartMonitorOnLaunch = chkEnableOnStartup.Checked;
             Settings.StartMinimized = chkStartMinimized.Checked;
             Settings.RunOnStartup = chkRunOnStartup.Checked;
 

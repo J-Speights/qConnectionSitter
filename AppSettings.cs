@@ -8,7 +8,9 @@ namespace qConnectionSitter
 {
     public class AppSettings
     {
-        public bool EnableOnStartup { get; set; }
+        public string ExecutablePath { get; set; }
+        public List<string> MonitoredInterfaceIds { get; set; } = new List<string>();
+        public bool StartMonitorOnLaunch { get; set; }
         public bool StartMinimized { get; set; }
         public bool RunOnStartup { get; set; }
     }

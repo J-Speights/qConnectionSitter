@@ -24,7 +24,7 @@
 		/// </summary>
 		private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
-            this.btnEnable = new System.Windows.Forms.Button();
+            this.btnStartMonitor = new System.Windows.Forms.Button();
             this.lblConnectionsText = new System.Windows.Forms.Label();
             this.lsvConnections = new System.Windows.Forms.ListView();
             this.clhConnectionsName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -39,16 +39,16 @@
             this.BtnAdvanced = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
-            // btnEnable
+            // btnStartMonitor
             // 
-            this.btnEnable.Enabled = false;
-            this.btnEnable.Location = new System.Drawing.Point(12, 12);
-            this.btnEnable.Name = "btnEnable";
-            this.btnEnable.Size = new System.Drawing.Size(257, 23);
-            this.btnEnable.TabIndex = 0;
-            this.btnEnable.Text = "Start Monitor";
-            this.btnEnable.UseVisualStyleBackColor = true;
-            this.btnEnable.Click += new System.EventHandler(this.BtnEnable_Click);
+            this.btnStartMonitor.Enabled = false;
+            this.btnStartMonitor.Location = new System.Drawing.Point(12, 12);
+            this.btnStartMonitor.Name = "btnStartMonitor";
+            this.btnStartMonitor.Size = new System.Drawing.Size(257, 23);
+            this.btnStartMonitor.TabIndex = 0;
+            this.btnStartMonitor.Text = "Start Monitor";
+            this.btnStartMonitor.UseVisualStyleBackColor = true;
+            this.btnStartMonitor.Click += new System.EventHandler(this.BtnStartMonitor_Click);
             // 
             // lblConnectionsText
             // 
@@ -147,7 +147,7 @@
             this.BtnAdvanced.TabIndex = 8;
             this.BtnAdvanced.Text = "Advanced Options";
             this.BtnAdvanced.UseVisualStyleBackColor = true;
-            this.BtnAdvanced.Click += new System.EventHandler(this.button1_Click);
+            this.BtnAdvanced.Click += new System.EventHandler(this.BtnAdvanced_Click);
             // 
             // MainWindow
             // 
@@ -155,7 +155,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(404, 271);
             this.Controls.Add(this.BtnAdvanced);
-            this.Controls.Add(this.btnEnable);
+            this.Controls.Add(this.btnStartMonitor);
             this.Controls.Add(this.btnExecutableBrowse);
             this.Controls.Add(this.txtExecutable);
             this.Controls.Add(this.lblExecutableText);
@@ -176,7 +176,7 @@
 
 		#endregion
 
-		private System.Windows.Forms.Button btnEnable;
+		private System.Windows.Forms.Button btnStartMonitor;
 		private System.Windows.Forms.Label lblConnectionsText;
 		private System.Windows.Forms.ListView lsvConnections;
 		private System.Windows.Forms.ColumnHeader clhConnectionsName;

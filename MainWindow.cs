@@ -31,6 +31,8 @@ namespace qConnectionSitter
         private readonly static Icon _disabledIcon;
         private const string ConfigFilePath = "config.xml";
 
+        private AppSettings _settings = new AppSettings();
+
         public MainWindow()
         {
             InitializeComponent();
@@ -121,7 +123,7 @@ namespace qConnectionSitter
 
         private void RefreshInterface()
         {
-            btnEnable.Enabled = ((_executable != null) && (_monitored.Count != 0));
+            btnStartMonitor.Enabled = ((_executable != null) && (_monitored.Count != 0));
         }
 
         private void BtnRemove_Click(object sender, EventArgs e)
@@ -180,42 +182,22 @@ namespace qConnectionSitter
 
         private void BtnEnable_Click(object sender, EventArgs e)
         {
-            foreach (Control ctrl in Controls)
-            {
-                if (!(ctrl == btnEnable)) ctrl.Enabled = _enabled;
-            }
-            if (_enabled)
-            {
-                _enabled = false;
-                _awaiting = false;
-                btnEnable.Text = "Enable";
-                nicTray.Text = (Application.ProductName + " (Disabled)");
-                nicTray.Icon = _disabledIcon;
-            }
-            else
-            {
-                _awaiting = !_up;
-                _enabled = true;
-                btnEnable.Text = "Disable";
-                nicTray.Text = (Application.ProductName + " (Enabled)");
-                nicTray.Icon = _enabledIcon;
-            }
+
         }
 
         private void SaveConfig()
         {
-            var config = new AppConfig
+            var config = new AppSettings
             {
                 ExecutablePath = _executable,
                 MonitoredInterfaceIds = _monitored.Keys.ToList(),
-                EnableAtAppLaunch = _chkEnabledAtAppLaunch.Checked
             };
 
             try
             {
                 using (var stream = new FileStream(ConfigFilePath, FileMode.Create))
                 {
-                    var serializer = new XmlSerializer(typeof(AppConfig));
+                    var serializer = new XmlSerializer(typeof(AppSettings));
                     serializer.Serialize(stream, config);
                 }
             }
@@ -245,8 +227,14 @@ namespace qConnectionSitter
             {
                 using (var stream = new FileStream(ConfigFilePath, FileMode.Open))
                 {
-                    var serializer = new XmlSerializer(typeof(AppConfig));
-                    var config = (AppConfig)serializer.Deserialize(stream);
+                    var serializer = new XmlSerializer(typeof(AppSettings));
+                    var config = (AppSettings)serializer.Deserialize(stream);
+                    _settings = new AppSettings
+                    {
+                        StartMonitorOnLaunch = config.StartMonitorOnLaunch,
+                        StartMinimized = config.StartMinimized,
+                        RunOnStartup = config.RunOnStartup,
+                    };
 
                     _executable = config.ExecutablePath;
                     txtExecutable.Text = _executable;
@@ -262,13 +250,10 @@ namespace qConnectionSitter
                     }
 
                     RefreshConnectionList();
-
-                    _chkEnabledAtAppLaunch.Checked = config.EnableAtAppLaunch;
-
                     RefreshStatus();
                     RefreshInterface();
 
-                    if (config.EnableAtAppLaunch)
+                    if (config.StartMonitorOnLaunch)
                     {
                         BtnEnable_Click(this, EventArgs.Empty);
                     }
@@ -319,12 +304,21 @@ namespace qConnectionSitter
 
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void MainWindow_Load(object sender, EventArgs e)
         {
 
         }
 
-        private void MainWindow_Load(object sender, EventArgs e)
+        private void BtnAdvanced_Click(object sender, EventArgs e)
+        {
+            var currentSettings = new AppSettings
+            {
+                //StartMonitorOnLaunch = chkEnableOnStartup.Checked
+            };
+
+        }
+
+        private void BtnStartMonitor_Click(object sender, EventArgs e)
         {
 
         }
